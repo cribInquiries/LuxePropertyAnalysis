@@ -1,6 +1,8 @@
 // Vercel Node.js entrypoint without Express. Minimal router.
 import url from 'url';
 import { AuthController } from '../src/controllers/AuthController';
+import { PropertyController } from '../src/controllers/PropertyController';
+import { AnalysisController } from '../src/controllers/AnalysisController';
 
 type Handler = (req: RequestLike, res: ResponseLike) => Promise<void> | void;
 
@@ -10,6 +12,7 @@ interface RequestLike {
   query: Record<string, string | string[]>;
   headers: Record<string, string | string[] | undefined>;
   body?: any;
+  params?: Record<string, string>;
 }
 
 interface ResponseLike {
@@ -75,12 +78,16 @@ const routes: Record<string, Record<string, Handler>> = {
 
 // Thin adapters to call existing controllers
 const authController = new AuthController();
+const propertyController = new PropertyController();
+const analysisController = new AnalysisController();
 
 function toExpressLike(req: RequestLike, res: ResponseLike) {
   const expressReq: any = {
     method: req.method,
     headers: req.headers,
     body: req.body,
+    params: req.params || {},
+    query: req.query || {},
   };
   const expressRes: any = {
     status(code: number) {
@@ -113,11 +120,32 @@ routes.POST['/api/v1/auth/login'] = async (req, res) => {
   await authController.login(expressReq, expressRes, next);
 };
 
+// Properties endpoints (minimal)
+routes.GET['/api/v1/properties'] = async (req, res) => {
+  const { expressReq, expressRes, next } = toExpressLike(req, res);
+  await propertyController.getProperties(expressReq, expressRes, next);
+};
+
+routes.GET['/api/v1/properties/:id'] = async (req, res) => {
+  const { expressReq, expressRes, next } = toExpressLike(req, res);
+  const match = req.pathname.match(/^\/api\/v1\/properties\/([^/]+)$/);
+  expressReq.params = { id: match ? match[1] : '' };
+  await propertyController.getProperty(expressReq, expressRes, next);
+};
+
+// Analysis public list
+routes.GET['/api/v1/analysis/public'] = async (req, res) => {
+  const { expressReq, expressRes, next } = toExpressLike(req, res);
+  await analysisController.getPublicAnalyses(expressReq, expressRes, next);
+};
+
 export default async function handler(req: any, res: any) {
   const parsed = url.parse(req.url || '', true);
   const pathname = parsed.pathname || '/';
   const method = (req.method || 'GET').toUpperCase();
   const body = await parseBody(req);
+  // basic param extraction for routes like /api/v1/properties/:id
+  const params: Record<string, string> = {};
 
   const requestLike: RequestLike = {
     method,
@@ -125,6 +153,7 @@ export default async function handler(req: any, res: any) {
     query: (parsed.query as any) || {},
     headers: req.headers || {},
     body,
+    params,
   };
   const responseLike = createResponse(res);
 
