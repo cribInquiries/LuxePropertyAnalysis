@@ -117,6 +117,10 @@ process.on('SIGINT', () => {
   process.exit(0);
 });
 
-startServer();
+// On Vercel, we export the app and let the serverless function handle requests
+// Avoid calling listen() when running in Vercel environment
+if (!process.env.VERCEL) {
+  startServer();
+}
 
 export default app;

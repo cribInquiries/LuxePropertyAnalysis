@@ -15,7 +15,8 @@
     "format": "prettier --write src/**/*.ts",
     "db:studio": "echo 'Supabase Studio available at: https://supabase.com/dashboard'",
     "docker:build": "docker build -t luxe-property-backend .",
-    "docker:run": "docker run -p 3000:3000 luxe-property-backend"
+    "docker:run": "docker run -p 3000:3000 luxe-property-backend",
+    "vercel-build": "tsc"
   },
   "keywords": [
     "property",
