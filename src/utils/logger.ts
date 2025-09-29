@@ -2,10 +2,19 @@ import winston from 'winston';
 import path from 'path';
 import fs from 'fs';
 
-// Ensure logs directory exists
+// Detect serverless (Vercel) environment: avoid filesystem writes
+const isServerless = Boolean(process.env.VERCEL);
+
+// Ensure logs directory exists only in non-serverless environments
 const logsDir = path.join(process.cwd(), 'logs');
-if (!fs.existsSync(logsDir)) {
-  fs.mkdirSync(logsDir, { recursive: true });
+if (!isServerless) {
+  try {
+    if (!fs.existsSync(logsDir)) {
+      fs.mkdirSync(logsDir, { recursive: true });
+    }
+  } catch {
+    // Ignore filesystem errors in restricted environments
+  }
 }
 
 // Define log format
@@ -38,34 +47,39 @@ export const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   format: logFormat,
   defaultMeta: { service: 'luxe-property-api' },
-  transports: [
-    // File transport for all logs
-    new winston.transports.File({
-      filename: path.join(logsDir, 'error.log'),
-      level: 'error',
-      maxsize: 5242880, // 5MB
-      maxFiles: 5,
-    }),
-    new winston.transports.File({
-      filename: path.join(logsDir, 'combined.log'),
-      maxsize: 5242880, // 5MB
-      maxFiles: 5,
-    }),
-  ],
-  exceptionHandlers: [
-    new winston.transports.File({
-      filename: path.join(logsDir, 'exceptions.log'),
-    }),
-  ],
-  rejectionHandlers: [
-    new winston.transports.File({
-      filename: path.join(logsDir, 'rejections.log'),
-    }),
-  ],
+  transports: isServerless
+    ? []
+    : [
+        new winston.transports.File({
+          filename: path.join(logsDir, 'error.log'),
+          level: 'error',
+          maxsize: 5242880,
+          maxFiles: 5,
+        }),
+        new winston.transports.File({
+          filename: path.join(logsDir, 'combined.log'),
+          maxsize: 5242880,
+          maxFiles: 5,
+        }),
+      ],
+  exceptionHandlers: isServerless
+    ? []
+    : [
+        new winston.transports.File({
+          filename: path.join(logsDir, 'exceptions.log'),
+        }),
+      ],
+  rejectionHandlers: isServerless
+    ? []
+    : [
+        new winston.transports.File({
+          filename: path.join(logsDir, 'rejections.log'),
+        }),
+      ],
 });
 
-// Add console transport for non-production environments
-if (process.env.NODE_ENV !== 'production') {
+// Add console transport (always in serverless; in dev for local)
+if (isServerless || process.env.NODE_ENV !== 'production') {
   logger.add(
     new winston.transports.Console({
       format: consoleFormat,
