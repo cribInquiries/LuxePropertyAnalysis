@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { DatabaseService as prisma } from '@/config/database';
+import { DatabaseService as prisma } from '../config/database';
 import { CustomError } from '../middleware/errorHandler';
 import { logger } from '../utils/logger';
 

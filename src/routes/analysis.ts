@@ -1,7 +1,7 @@
 import express from 'express';
-import { AnalysisController } from '@/controllers/AnalysisController';
-import { authenticate, authorize } from '@/middleware/auth';
-import { validate, validateQuery, validateParams, schemas } from '@/middleware/validation';
+import { AnalysisController } from '../controllers/AnalysisController';
+import { authenticate, authorize } from '../middleware/auth';
+import { validate, validateQuery, validateParams, schemas } from '../middleware/validation';
 
 const router = express.Router();
 const analysisController = new AnalysisController();

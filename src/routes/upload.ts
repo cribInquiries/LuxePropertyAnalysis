@@ -1,7 +1,7 @@
 import express from 'express';
-import { UploadController } from '@/controllers/UploadController';
-import { authenticate } from '@/middleware/auth';
-import { uploadMiddleware } from '@/middleware/upload';
+import { UploadController } from '../controllers/UploadController';
+import { authenticate } from '../middleware/auth';
+import { uploadMiddleware } from '../middleware/upload';
 
 const router = express.Router();
 const uploadController = new UploadController();

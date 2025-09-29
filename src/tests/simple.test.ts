@@ -1,5 +1,5 @@
 // Simple test to verify basic functionality
-import { DatabaseService } from '@/config/supabase';
+import { DatabaseService } from '../config/supabase';
 
 describe('Basic Tests', () => {
   test('DatabaseService should be defined', () => {

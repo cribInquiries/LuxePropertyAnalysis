@@ -1,4 +1,4 @@
-import { DatabaseService as prisma } from '@/config/database';
+import { DatabaseService as prisma } from '../config/database';
 
 // Setup test database
 beforeAll(async () => {

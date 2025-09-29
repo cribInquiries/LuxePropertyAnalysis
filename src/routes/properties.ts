@@ -1,7 +1,7 @@
 import express from 'express';
-import { PropertyController } from '@/controllers/PropertyController';
-import { authenticate, optionalAuth } from '@/middleware/auth';
-import { validate, validateQuery, validateParams, schemas } from '@/middleware/validation';
+import { PropertyController } from '../controllers/PropertyController';
+import { authenticate, optionalAuth } from '../middleware/auth';
+import { validate, validateQuery, validateParams, schemas } from '../middleware/validation';
 
 const router = express.Router();
 const propertyController = new PropertyController();

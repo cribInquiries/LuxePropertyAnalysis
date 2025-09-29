@@ -1,6 +1,6 @@
 import request from 'supertest';
 import app from '../../index';
-import { prisma } from '@/config/database';
+import { prisma } from '../../config/database';
 
 describe('AuthController', () => {
   describe('POST /api/v1/auth/register', () => {

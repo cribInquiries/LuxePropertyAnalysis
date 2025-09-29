@@ -8,9 +8,9 @@ import dotenv from 'dotenv';
 
 import { errorHandler } from './middleware/errorHandler';
 import { notFound } from './middleware/notFound';
-import { logger } from '@/utils/logger';
-import { connectDatabase } from '@/config/database';
-import { validateEnvironment } from '@/config/environment';
+import { logger } from './utils/logger';
+import { connectDatabase } from './config/database';
+import { validateEnvironment } from './config/environment';
 
 // Import routes
 import authRoutes from './routes/auth';
