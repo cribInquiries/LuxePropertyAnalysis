@@ -1,5 +1,5 @@
 import Joi from 'joi';
-import { logger } from '@/utils/logger';
+import { logger } from '../utils/logger';
 
 const envSchema = Joi.object({
   NODE_ENV: Joi.string()

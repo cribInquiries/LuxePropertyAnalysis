@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { DatabaseService as prisma } from '@/config/database';
-import { CustomError } from '@/middleware/errorHandler';
-import { logger } from '@/utils/logger';
+import { CustomError } from '../middleware/errorHandler';
+import { logger } from '../utils/logger';
 
 export class UploadController {
   public uploadImage = async (req: Request, res: Response, next: NextFunction): Promise<void> => {

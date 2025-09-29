@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
-import { DatabaseService as prisma } from '@/config/database';
-import { AuthRequest } from '@/middleware/auth';
-import { CustomError } from '@/middleware/errorHandler';
-import { logger } from '@/utils/logger';
+import { DatabaseService as prisma } from '../config/database';
+import { AuthRequest } from '../middleware/auth';
+import { CustomError } from '../middleware/errorHandler';
+import { logger } from '../utils/logger';
 
 export class UserController {
   public getProfile = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {

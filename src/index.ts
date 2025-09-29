@@ -6,18 +6,18 @@ import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 
-import { errorHandler } from '@/middleware/errorHandler';
-import { notFound } from '@/middleware/notFound';
+import { errorHandler } from './middleware/errorHandler';
+import { notFound } from './middleware/notFound';
 import { logger } from '@/utils/logger';
 import { connectDatabase } from '@/config/database';
 import { validateEnvironment } from '@/config/environment';
 
 // Import routes
-import authRoutes from '@/routes/auth';
-import propertyRoutes from '@/routes/properties';
-import userRoutes from '@/routes/users';
-import analysisRoutes from '@/routes/analysis';
-import uploadRoutes from '@/routes/upload';
+import authRoutes from './routes/auth';
+import propertyRoutes from './routes/properties';
+import userRoutes from './routes/users';
+import analysisRoutes from './routes/analysis';
+import uploadRoutes from './routes/upload';
 
 // Load environment variables
 dotenv.config();

@@ -1,11 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { DatabaseService as prisma } from '@/config/database';
-import { AuthRequest } from '@/middleware/auth';
-import { CustomError } from '@/middleware/errorHandler';
-import { logger } from '@/utils/logger';
-import { EmailService } from '@/services/EmailService';
+import { DatabaseService as prisma } from '../config/database';
+import { AuthRequest } from '../middleware/auth';
+import { CustomError } from '../middleware/errorHandler';
+import { logger } from '../utils/logger';
+import { EmailService } from '../services/EmailService';
 
 export class AuthController {
   private emailService = new EmailService();
