@@ -1,5 +1,6 @@
 // Vercel Node.js entrypoint without Express. Minimal router.
 import url from 'url';
+import { AuthController } from '../src/controllers/AuthController';
 
 type Handler = (req: RequestLike, res: ResponseLike) => Promise<void> | void;
 
@@ -62,10 +63,54 @@ const routes: Record<string, Record<string, Handler>> = {
     '/health': async (_req, res) => {
       res.json({ status: 'OK', timestamp: new Date().toISOString() });
     },
+    '/api/v1/health': async (_req, res) => {
+      res.json({ status: 'OK', timestamp: new Date().toISOString(), uptime: process.uptime() });
+    },
     '/': async (_req, res) => {
       res.json({ name: 'Luxe Property Analysis API', status: 'online' });
     },
   },
+  POST: {},
+};
+
+// Thin adapters to call existing controllers
+const authController = new AuthController();
+
+function toExpressLike(req: RequestLike, res: ResponseLike) {
+  const expressReq: any = {
+    method: req.method,
+    headers: req.headers,
+    body: req.body,
+  };
+  const expressRes: any = {
+    status(code: number) {
+      res.status(code);
+      return this;
+    },
+    json(payload: any) {
+      res.json(payload);
+    },
+    send(payload: any) {
+      res.send(payload);
+    },
+  };
+  const next = (err?: any) => {
+    if (err) {
+      res.status(err.statusCode || 500).json({ success: false, error: { message: err.message || 'Internal Error' } });
+    }
+  };
+  return { expressReq, expressRes, next };
+}
+
+// Register auth endpoints
+routes.POST['/api/v1/auth/register'] = async (req, res) => {
+  const { expressReq, expressRes, next } = toExpressLike(req, res);
+  await authController.register(expressReq, expressRes, next);
+};
+
+routes.POST['/api/v1/auth/login'] = async (req, res) => {
+  const { expressReq, expressRes, next } = toExpressLike(req, res);
+  await authController.login(expressReq, expressRes, next);
 };
 
 export default async function handler(req: any, res: any) {
