@@ -40,7 +40,7 @@ export function DashboardNav() {
     setIsLoggingOut(true)
     const supabase = createClient()
     await supabase.auth.signOut()
-    router.push("/login")
+    router.push("/auth/login")
     router.refresh()
   }
 
