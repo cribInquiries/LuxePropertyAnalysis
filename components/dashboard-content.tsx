@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -35,38 +35,33 @@ export function DashboardContent() {
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [sortBy, setSortBy] = useState<string>("created_at")
 
-  const filteredAnalyses = useMemo(() => {
-    return analyses
-      .filter((analysis) => {
-        const matchesSearch = analysis.address.toLowerCase().includes(searchTerm.toLowerCase())
-        const matchesStatus = statusFilter === "all" || analysis.status === statusFilter
-        return matchesSearch && matchesStatus
-      })
-      .sort((a, b) => {
-        switch (sortBy) {
-          case "created_at":
-            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-          case "updated_at":
-            return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-          case "address":
-            return a.address.localeCompare(b.address)
-          case "purchase_price":
-            return b.purchase_price - a.purchase_price
-          default:
-            return 0
-        }
-      })
-  }, [analyses, searchTerm, statusFilter, sortBy])
+  // Filter and sort analyses
+  const filteredAnalyses = analyses
+    .filter((analysis) => {
+      const matchesSearch = analysis.address.toLowerCase().includes(searchTerm.toLowerCase())
+      const matchesStatus = statusFilter === "all" || analysis.status === statusFilter
+      return matchesSearch && matchesStatus
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case "created_at":
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        case "updated_at":
+          return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+        case "address":
+          return a.address.localeCompare(b.address)
+        case "purchase_price":
+          return b.purchase_price - a.purchase_price
+        default:
+          return 0
+      }
+    })
 
-  const dashboardMetrics = useMemo(
-    () => ({
-      totalAnalyses: analyses.length,
-      favoriteAnalyses: getFavoriteAnalyses().length,
-      completedAnalyses: getAnalysesByStatus("completed").length,
-      totalInvestment: analyses.reduce((sum, analysis) => sum + analysis.purchase_price, 0),
-    }),
-    [analyses, getFavoriteAnalyses, getAnalysesByStatus],
-  )
+  // Calculate dashboard metrics
+  const totalAnalyses = analyses.length
+  const favoriteAnalyses = getFavoriteAnalyses().length
+  const completedAnalyses = getAnalysesByStatus("completed").length
+  const totalInvestment = analyses.reduce((sum, analysis) => sum + analysis.purchase_price, 0)
 
   const handleEdit = (analysis: PropertyAnalysis) => {
     setSelectedAnalysis(analysis)
@@ -90,24 +85,22 @@ export function DashboardContent() {
     }).format(amount)
   }
 
-  const calculateCashFlow = useMemo(() => {
-    return (analysis: PropertyAnalysis) => {
-      const { monthly_rent, monthly_expenses, loan_amount, interest_rate, loan_term, vacancy_rate } =
-        analysis.analysis_data
+  const calculateCashFlow = (analysis: PropertyAnalysis) => {
+    const { monthly_rent, monthly_expenses, loan_amount, interest_rate, loan_term, vacancy_rate } =
+      analysis.analysis_data
 
-      const monthlyInterestRate = (interest_rate || 0) / 100 / 12
-      const numberOfPayments = (loan_term || 30) * 12
+    const monthlyInterestRate = (interest_rate || 0) / 100 / 12
+    const numberOfPayments = (loan_term || 30) * 12
 
-      const monthlyMortgage =
-        loan_amount > 0
-          ? (loan_amount * monthlyInterestRate * Math.pow(1 + monthlyInterestRate, numberOfPayments)) /
-            (Math.pow(1 + monthlyInterestRate, numberOfPayments) - 1)
-          : 0
+    const monthlyMortgage =
+      loan_amount > 0
+        ? (loan_amount * monthlyInterestRate * Math.pow(1 + monthlyInterestRate, numberOfPayments)) /
+          (Math.pow(1 + monthlyInterestRate, numberOfPayments) - 1)
+        : 0
 
-      const effectiveMonthlyRent = (monthly_rent || 0) * (1 - (vacancy_rate || 5) / 100)
-      return effectiveMonthlyRent - (monthly_expenses || 0) - monthlyMortgage
-    }
-  }, [])
+    const effectiveMonthlyRent = (monthly_rent || 0) * (1 - (vacancy_rate || 5) / 100)
+    return effectiveMonthlyRent - (monthly_expenses || 0) - monthlyMortgage
+  }
 
   if (showForm) {
     return (
@@ -148,7 +141,7 @@ export function DashboardContent() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Total Analyses</p>
-                <p className="text-2xl font-bold">{dashboardMetrics.totalAnalyses}</p>
+                <p className="text-2xl font-bold">{totalAnalyses}</p>
               </div>
               <Home className="h-8 w-8 text-blue-500" />
             </div>
@@ -160,7 +153,7 @@ export function DashboardContent() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Favorites</p>
-                <p className="text-2xl font-bold">{dashboardMetrics.favoriteAnalyses}</p>
+                <p className="text-2xl font-bold">{favoriteAnalyses}</p>
               </div>
               <Heart className="h-8 w-8 text-red-500" />
             </div>
@@ -172,7 +165,7 @@ export function DashboardContent() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Completed</p>
-                <p className="text-2xl font-bold">{dashboardMetrics.completedAnalyses}</p>
+                <p className="text-2xl font-bold">{completedAnalyses}</p>
               </div>
               <TrendingUp className="h-8 w-8 text-green-500" />
             </div>
@@ -184,7 +177,7 @@ export function DashboardContent() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Total Investment</p>
-                <p className="text-2xl font-bold">{formatCurrency(dashboardMetrics.totalInvestment)}</p>
+                <p className="text-2xl font-bold">{formatCurrency(totalInvestment)}</p>
               </div>
               <DollarSign className="h-8 w-8 text-yellow-500" />
             </div>
@@ -204,7 +197,6 @@ export function DashboardContent() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
-                  aria-label="Search properties by address"
                 />
               </div>
             </div>
@@ -288,13 +280,12 @@ export function DashboardContent() {
                             size="icon"
                             onClick={() => handleToggleFavorite(analysis)}
                             className={analysis.is_favorite ? "text-red-500" : ""}
-                            aria-label={analysis.is_favorite ? "Remove from favorites" : "Add to favorites"}
                           >
                             <Heart className={`h-4 w-4 ${analysis.is_favorite ? "fill-current" : ""}`} />
                           </Button>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" aria-label="More options">
+                              <Button variant="ghost" size="icon">
                                 <MoreVertical className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
@@ -350,88 +341,92 @@ export function DashboardContent() {
         </TabsContent>
 
         <TabsContent value="list">
-          {loading ? (
-            <div className="space-y-4 p-6">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="flex items-center space-x-4 animate-pulse">
-                  <div className="h-12 w-12 bg-muted rounded"></div>
-                  <div className="flex-1 space-y-2">
-                    <div className="h-4 bg-muted rounded w-1/3"></div>
-                    <div className="h-3 bg-muted rounded w-1/4"></div>
-                  </div>
-                  <div className="h-8 w-20 bg-muted rounded"></div>
-                </div>
-              ))}
-            </div>
-          ) : filteredAnalyses.length === 0 ? (
-            <div className="p-12 text-center">
-              <Home className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No analyses found</h3>
-              <p className="text-muted-foreground mb-4">
-                {searchTerm || statusFilter !== "all"
-                  ? "Try adjusting your search or filters"
-                  : "Get started by creating your first property analysis"}
-              </p>
-              <Button onClick={() => setShowForm(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Create Analysis
-              </Button>
-            </div>
-          ) : (
-            <div className="divide-y">
-              {filteredAnalyses.map((analysis) => {
-                const cashFlow = calculateCashFlow(analysis)
-                return (
-                  <div key={analysis.id} className="p-6 hover:bg-muted/50 transition-colors">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
-                        <div className="flex-shrink-0">
-                          <Home className="h-8 w-8 text-muted-foreground" />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold">{analysis.address}</h3>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="text-sm text-muted-foreground">
-                              {formatCurrency(analysis.purchase_price)}
-                            </span>
-                            <Badge variant={analysis.status === "completed" ? "default" : "secondary"}>
-                              {analysis.status}
-                            </Badge>
-                            {analysis.is_favorite && <Heart className="h-3 w-3 fill-current text-red-500" />}
-                          </div>
-                        </div>
+          <Card>
+            <CardContent className="p-0">
+              {loading ? (
+                <div className="space-y-4 p-6">
+                  {[...Array(5)].map((_, i) => (
+                    <div key={i} className="flex items-center space-x-4 animate-pulse">
+                      <div className="h-12 w-12 bg-muted rounded"></div>
+                      <div className="flex-1 space-y-2">
+                        <div className="h-4 bg-muted rounded w-1/3"></div>
+                        <div className="h-3 bg-muted rounded w-1/4"></div>
                       </div>
-                      <div className="flex items-center gap-4">
-                        <div className="text-right">
-                          <div className="text-sm text-muted-foreground">Monthly Cash Flow</div>
-                          <div className={`font-semibold ${cashFlow >= 0 ? "text-green-600" : "text-red-600"}`}>
-                            {formatCurrency(cashFlow)}
-                          </div>
-                        </div>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" aria-label="More options">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleEdit(analysis)}>
-                              <Edit className="h-4 w-4 mr-2" />
-                              Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleDelete(analysis)} className="text-destructive">
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
+                      <div className="h-8 w-20 bg-muted rounded"></div>
                     </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
+                  ))}
+                </div>
+              ) : filteredAnalyses.length === 0 ? (
+                <div className="p-12 text-center">
+                  <Home className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No analyses found</h3>
+                  <p className="text-muted-foreground mb-4">
+                    {searchTerm || statusFilter !== "all"
+                      ? "Try adjusting your search or filters"
+                      : "Get started by creating your first property analysis"}
+                  </p>
+                  <Button onClick={() => setShowForm(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Analysis
+                  </Button>
+                </div>
+              ) : (
+                <div className="divide-y">
+                  {filteredAnalyses.map((analysis) => {
+                    const cashFlow = calculateCashFlow(analysis)
+                    return (
+                      <div key={analysis.id} className="p-6 hover:bg-muted/50 transition-colors">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-4">
+                            <div className="flex-shrink-0">
+                              <Home className="h-8 w-8 text-muted-foreground" />
+                            </div>
+                            <div>
+                              <h3 className="font-semibold">{analysis.address}</h3>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className="text-sm text-muted-foreground">
+                                  {formatCurrency(analysis.purchase_price)}
+                                </span>
+                                <Badge variant={analysis.status === "completed" ? "default" : "secondary"}>
+                                  {analysis.status}
+                                </Badge>
+                                {analysis.is_favorite && <Heart className="h-3 w-3 fill-current text-red-500" />}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <div className="text-right">
+                              <div className="text-sm text-muted-foreground">Monthly Cash Flow</div>
+                              <div className={`font-semibold ${cashFlow >= 0 ? "text-green-600" : "text-red-600"}`}>
+                                {formatCurrency(cashFlow)}
+                              </div>
+                            </div>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => handleEdit(analysis)}>
+                                  <Edit className="h-4 w-4 mr-2" />
+                                  Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleDelete(analysis)} className="text-destructive">
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

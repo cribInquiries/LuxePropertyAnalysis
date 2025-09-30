@@ -1,6 +1,6 @@
 "use client"
 
-import { auth } from "@/lib/auth/supabase-auth"
+import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -13,14 +13,15 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
-import { Building2, LogOut } from "lucide-react"
+
+interface User {
+  id: string
+  email: string
+  name?: string
+}
 
 interface UserNavProps {
-  user: {
-    id: string
-    email: string
-    name?: string
-  }
+  user: User
 }
 
 export function UserNav({ user }: UserNavProps) {
@@ -30,13 +31,14 @@ export function UserNav({ user }: UserNavProps) {
   const handleSignOut = async () => {
     setIsSigningOut(true)
     try {
-      await auth.signOut()
+      const supabase = createClient()
+      await supabase.auth.signOut()
       router.push("/auth/login")
       router.refresh()
     } catch (error) {
       console.error("Error signing out:", error)
+      // Still redirect even if there's an error to ensure user is logged out
       router.push("/auth/login")
-      router.refresh()
     } finally {
       setIsSigningOut(false)
     }
@@ -51,7 +53,7 @@ export function UserNav({ user }: UserNavProps) {
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <Building2 className="w-5 h-5 text-slate-700" />
+            <span className="text-xl">🏢</span>
             <span className="font-bold text-slate-900">LuxeAnalytics</span>
           </div>
 
@@ -74,6 +76,7 @@ export function UserNav({ user }: UserNavProps) {
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem className="cursor-pointer">
+                <span className="mr-2">👤</span>
                 <span>Profile</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
@@ -82,7 +85,7 @@ export function UserNav({ user }: UserNavProps) {
                 onClick={handleSignOut}
                 disabled={isSigningOut}
               >
-                <LogOut className="mr-2 h-4 w-4" />
+                <span className="mr-2">🚪</span>
                 <span>{isSigningOut ? "Signing out..." : "Sign out"}</span>
               </DropdownMenuItem>
             </DropdownMenuContent>

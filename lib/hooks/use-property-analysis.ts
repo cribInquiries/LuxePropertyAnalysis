@@ -1,27 +1,29 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { toast } from "@/hooks/use-toast"
 
 export interface PropertyAnalysis {
   id: string
   user_id: string
-  address: string
-  purchase_price: number
-  analysis_data: Record<string, any>
-  notes?: string
+  property_name: string
+  client_name?: string
+  address?: string
+  background_image?: string
+  status: "draft" | "completed" | "archived"
   is_favorite: boolean
   tags: string[]
-  status: "draft" | "completed" | "archived"
+  notes?: string
   created_at: string
   updated_at: string
 }
 
 export interface CreatePropertyAnalysisData {
-  address: string
-  purchase_price: number
-  analysis_data?: Record<string, any>
+  property_name: string
+  client_name?: string
+  address?: string
+  background_image?: string
   notes?: string
   tags?: string[]
   status?: "draft" | "completed"
@@ -32,17 +34,17 @@ export function usePropertyAnalysis() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [mounted, setMounted] = useState(false)
-  const supabase = mounted ? createClient() : null
 
   useEffect(() => {
     setMounted(true)
   }, [])
 
-  const loadAnalyses = useCallback(async () => {
-    if (!mounted || !supabase) return
+  const loadAnalyses = async () => {
+    if (!mounted) return
 
     try {
       setLoading(true)
+      const supabase = createClient()
       const {
         data: { user },
       } = await supabase.auth.getUser()
@@ -61,19 +63,19 @@ export function usePropertyAnalysis() {
       if (fetchError) throw fetchError
 
       setAnalyses(data || [])
-      setError(null)
     } catch (err) {
       console.error("Error loading analyses:", err)
       setError(err instanceof Error ? err.message : "Failed to load analyses")
     } finally {
       setLoading(false)
     }
-  }, [mounted, supabase])
+  }
 
   const createAnalysis = async (data: CreatePropertyAnalysisData): Promise<PropertyAnalysis | null> => {
-    if (!supabase) return null
+    if (!mounted) return null
 
     try {
+      const supabase = createClient()
       const {
         data: { user },
       } = await supabase.auth.getUser()
@@ -84,9 +86,10 @@ export function usePropertyAnalysis() {
         .from("property_analyses")
         .insert({
           user_id: user.id,
+          property_name: data.property_name,
+          client_name: data.client_name,
           address: data.address,
-          purchase_price: data.purchase_price,
-          analysis_data: data.analysis_data || {},
+          background_image: data.background_image,
           notes: data.notes,
           tags: data.tags || [],
           status: data.status || "draft",
@@ -97,9 +100,6 @@ export function usePropertyAnalysis() {
       if (error) throw error
 
       setAnalyses((prev) => [newAnalysis, ...prev])
-
-      // Log activity
-      await logActivity("create_analysis", "property_analysis", newAnalysis.id)
 
       toast({
         title: "Analysis created",
@@ -121,9 +121,10 @@ export function usePropertyAnalysis() {
   }
 
   const updateAnalysis = async (id: string, updates: Partial<PropertyAnalysis>): Promise<PropertyAnalysis | null> => {
-    if (!supabase) return null
+    if (!mounted) return null
 
     try {
+      const supabase = createClient()
       const { data: updatedAnalysis, error } = await supabase
         .from("property_analyses")
         .update(updates)
@@ -134,9 +135,6 @@ export function usePropertyAnalysis() {
       if (error) throw error
 
       setAnalyses((prev) => prev.map((analysis) => (analysis.id === id ? updatedAnalysis : analysis)))
-
-      // Log activity
-      await logActivity("update_analysis", "property_analysis", id)
 
       toast({
         title: "Analysis updated",
@@ -158,17 +156,15 @@ export function usePropertyAnalysis() {
   }
 
   const deleteAnalysis = async (id: string): Promise<boolean> => {
-    if (!supabase) return false
+    if (!mounted) return false
 
     try {
+      const supabase = createClient()
       const { error } = await supabase.from("property_analyses").delete().eq("id", id)
 
       if (error) throw error
 
       setAnalyses((prev) => prev.filter((analysis) => analysis.id !== id))
-
-      // Log activity
-      await logActivity("delete_analysis", "property_analysis", id)
 
       toast({
         title: "Analysis deleted",
@@ -190,9 +186,10 @@ export function usePropertyAnalysis() {
   }
 
   const toggleFavorite = async (id: string): Promise<boolean> => {
-    if (!supabase) return false
+    if (!mounted) return false
 
     try {
+      const supabase = createClient()
       const analysis = analyses.find((a) => a.id === id)
       if (!analysis) return false
 
@@ -207,63 +204,10 @@ export function usePropertyAnalysis() {
 
       setAnalyses((prev) => prev.map((a) => (a.id === id ? updatedAnalysis : a)))
 
-      // Log activity
-      await logActivity(analysis.is_favorite ? "unfavorite_analysis" : "favorite_analysis", "property_analysis", id)
-
       return true
     } catch (err) {
       console.error("Error toggling favorite:", err)
       return false
-    }
-  }
-
-  const autoSaveAnalysis = useCallback(
-    async (id: string, analysisData: Record<string, any>) => {
-      if (!supabase) return
-
-      try {
-        await supabase
-          .from("property_analyses")
-          .update({
-            analysis_data: analysisData,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", id)
-
-        // Update local state without showing toast for auto-save
-        setAnalyses((prev) =>
-          prev.map((analysis) =>
-            analysis.id === id
-              ? { ...analysis, analysis_data: analysisData, updated_at: new Date().toISOString() }
-              : analysis,
-          ),
-        )
-      } catch (err) {
-        console.error("Auto-save failed:", err)
-      }
-    },
-    [supabase],
-  )
-
-  const logActivity = async (action: string, resourceType: string, resourceId: string) => {
-    if (!supabase) return
-
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-
-      if (!user) return
-
-      await supabase.from("user_activity_log").insert({
-        user_id: user.id,
-        action,
-        resource_type: resourceType,
-        resource_id: resourceId,
-        metadata: {},
-      })
-    } catch (err) {
-      console.error("Failed to log activity:", err)
     }
   }
 
@@ -287,7 +231,7 @@ export function usePropertyAnalysis() {
     if (mounted) {
       loadAnalyses()
     }
-  }, [mounted, loadAnalyses])
+  }, [mounted])
 
   return {
     analyses,
@@ -297,7 +241,6 @@ export function usePropertyAnalysis() {
     updateAnalysis,
     deleteAnalysis,
     toggleFavorite,
-    autoSaveAnalysis,
     refreshAnalyses: loadAnalyses,
     getAnalysisById,
     getFavoriteAnalyses,

@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { auth } from "@/lib/auth/supabase-auth"
+import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -20,6 +20,7 @@ export default function SignupPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
+  const [displayName, setDisplayName] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
@@ -54,13 +55,21 @@ export default function SignupPage() {
     }
 
     try {
-      const displayName = email.split("@")[0]
-      const { user, error: authError } = await auth.signUp(email.trim(), password, displayName)
+      const supabase = createClient()
+      const { error: authError } = await supabase.auth.signUp({
+        email: email.trim(),
+        password,
+        options: {
+          emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/`,
+          data: {
+            display_name: displayName.trim() || email.split("@")[0],
+          },
+        },
+      })
 
-      if (authError) throw new Error(authError)
-      if (user) {
-        router.push("/auth/signup-success")
-      }
+      if (authError) throw authError
+
+      router.push("/auth/signup-success")
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred during sign up")
     } finally {
@@ -88,6 +97,18 @@ export default function SignupPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSignup} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="displayName">Display Name (Optional)</Label>
+                <Input
+                  id="displayName"
+                  type="text"
+                  placeholder="Enter your name"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  className="h-11"
+                  autoComplete="name"
+                />
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
