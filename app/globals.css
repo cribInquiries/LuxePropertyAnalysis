@@ -4,76 +4,76 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Updated color tokens to use only navy and white, removing gold */
-  --background: oklch(1 0 0); /* White background */
-  --foreground: oklch(0.2 0.05 240); /* Dark navy text */
-  --card: oklch(0.98 0 0); /* Light gray card background */
-  --card-foreground: oklch(0.2 0.05 240); /* Dark navy card text */
-  --popover: oklch(1 0 0); /* White popover */
-  --popover-foreground: oklch(0.2 0.05 240); /* Dark navy popover text */
-  --primary: oklch(0.2 0.05 240); /* Dark navy primary */
-  --primary-foreground: oklch(1 0 0); /* White primary text */
-  --secondary: oklch(0.95 0 0); /* Light gray secondary instead of gold */
-  --secondary-foreground: oklch(0.2 0.05 240); /* Dark navy secondary text */
-  --muted: oklch(0.98 0 0); /* Light gray muted */
-  --muted-foreground: oklch(0.5 0 0); /* Gray muted text */
-  --accent: oklch(0.3 0.05 240); /* Darker navy accent instead of gold */
-  --accent-foreground: oklch(1 0 0); /* White accent text */
+  /* Updated to dark analytics theme inspired by Vercel/Braintrust */
+  --background: oklch(0.15 0.01 240); /* Dark background */
+  --foreground: oklch(0.98 0 0); /* White text */
+  --card: oklch(0.18 0.01 240); /* Slightly lighter dark cards */
+  --card-foreground: oklch(0.98 0 0); /* White card text */
+  --popover: oklch(0.18 0.01 240); /* Dark popover */
+  --popover-foreground: oklch(0.98 0 0); /* White popover text */
+  --primary: oklch(0.55 0.22 264); /* Blue primary */
+  --primary-foreground: oklch(0.98 0 0); /* White primary text */
+  --secondary: oklch(0.25 0.01 240); /* Dark secondary */
+  --secondary-foreground: oklch(0.98 0 0); /* White secondary text */
+  --muted: oklch(0.25 0.01 240); /* Muted dark */
+  --muted-foreground: oklch(0.65 0 0); /* Gray muted text */
+  --accent: oklch(0.55 0.22 264); /* Blue accent */
+  --accent-foreground: oklch(0.98 0 0); /* White accent text */
   --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.577 0.245 27.325);
-  --border: oklch(0.9 0 0); /* Light border */
-  --input: oklch(1 0 0); /* White input */
-  --ring: oklch(0.2 0.05 240 / 0.5); /* Navy ring instead of gold */
-  --chart-1: oklch(0.2 0.05 240); /* Navy chart colors */
-  --chart-2: oklch(0.4 0.05 240);
-  --chart-3: oklch(0.6 0.05 240);
-  --chart-4: oklch(0.8 0.05 240);
-  --chart-5: oklch(0.5 0.05 240);
+  --destructive-foreground: oklch(0.98 0 0);
+  --border: oklch(0.25 0.01 240); /* Dark border */
+  --input: oklch(0.22 0.01 240); /* Dark input */
+  --ring: oklch(0.55 0.22 264 / 0.5); /* Blue ring */
+  --chart-1: oklch(0.55 0.22 264); /* Blue */
+  --chart-2: oklch(0.65 0.25 160); /* Green */
+  --chart-3: oklch(0.75 0.2 60); /* Yellow */
+  --chart-4: oklch(0.6 0.25 300); /* Purple */
+  --chart-5: oklch(0.7 0.22 30); /* Orange */
   --radius: 0.625rem;
-  --sidebar: oklch(0.98 0 0);
-  --sidebar-foreground: oklch(0.2 0.05 240);
-  --sidebar-primary: oklch(0.2 0.05 240);
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.3 0.05 240); /* Navy accent instead of gold */
-  --sidebar-accent-foreground: oklch(1 0 0);
-  --sidebar-border: oklch(0.9 0 0);
-  --sidebar-ring: oklch(0.2 0.05 240 / 0.5); /* Navy ring */
+  --sidebar: oklch(0.18 0.01 240);
+  --sidebar-foreground: oklch(0.98 0 0);
+  --sidebar-primary: oklch(0.55 0.22 264);
+  --sidebar-primary-foreground: oklch(0.98 0 0);
+  --sidebar-accent: oklch(0.25 0.01 240);
+  --sidebar-accent-foreground: oklch(0.98 0 0);
+  --sidebar-border: oklch(0.25 0.01 240);
+  --sidebar-ring: oklch(0.55 0.22 264 / 0.5);
 }
 
 .dark {
-  /* Updated dark mode tokens to use only navy and white */
-  --background: oklch(0.2 0.05 240); /* Dark navy background */
-  --foreground: oklch(1 0 0); /* White text */
-  --card: oklch(0.25 0.05 240); /* Slightly lighter navy cards */
-  --card-foreground: oklch(1 0 0); /* White card text */
-  --popover: oklch(0.2 0.05 240); /* Dark navy popover */
-  --popover-foreground: oklch(1 0 0); /* White popover text */
-  --primary: oklch(1 0 0); /* White primary */
-  --primary-foreground: oklch(0.2 0.05 240); /* Dark navy primary text */
-  --secondary: oklch(0.15 0.05 240); /* Darker navy secondary instead of gold */
-  --secondary-foreground: oklch(1 0 0); /* White secondary text */
-  --muted: oklch(0.3 0.05 240); /* Muted navy */
-  --muted-foreground: oklch(0.7 0 0); /* Light gray muted text */
-  --accent: oklch(1 0 0); /* White accent instead of gold */
-  --accent-foreground: oklch(0.2 0.05 240); /* Navy accent text */
+  /* Dark mode uses same values for consistency */
+  --background: oklch(0.15 0.01 240);
+  --foreground: oklch(0.98 0 0);
+  --card: oklch(0.18 0.01 240);
+  --card-foreground: oklch(0.98 0 0);
+  --popover: oklch(0.18 0.01 240);
+  --popover-foreground: oklch(0.98 0 0);
+  --primary: oklch(0.55 0.22 264);
+  --primary-foreground: oklch(0.98 0 0);
+  --secondary: oklch(0.25 0.01 240);
+  --secondary-foreground: oklch(0.98 0 0);
+  --muted: oklch(0.25 0.01 240);
+  --muted-foreground: oklch(0.65 0 0);
+  --accent: oklch(0.55 0.22 264);
+  --accent-foreground: oklch(0.98 0 0);
   --destructive: oklch(0.396 0.141 25.723);
-  --destructive-foreground: oklch(0.637 0.237 25.331);
-  --border: oklch(0.3 0.05 240); /* Navy border */
-  --input: oklch(0.25 0.05 240); /* Navy input */
-  --ring: oklch(1 0 0 / 0.5); /* White ring instead of gold */
-  --chart-1: oklch(1 0 0); /* White/navy chart colors */
-  --chart-2: oklch(0.8 0 0);
-  --chart-3: oklch(0.6 0 0);
-  --chart-4: oklch(0.4 0 0);
-  --chart-5: oklch(0.7 0 0);
-  --sidebar: oklch(0.25 0.05 240);
-  --sidebar-foreground: oklch(1 0 0);
-  --sidebar-primary: oklch(1 0 0); /* White primary instead of gold */
-  --sidebar-primary-foreground: oklch(0.2 0.05 240);
-  --sidebar-accent: oklch(0.3 0.05 240);
-  --sidebar-accent-foreground: oklch(1 0 0);
-  --sidebar-border: oklch(0.3 0.05 240);
-  --sidebar-ring: oklch(1 0 0 / 0.5); /* White ring */
+  --destructive-foreground: oklch(0.98 0 0);
+  --border: oklch(0.25 0.01 240);
+  --input: oklch(0.22 0.01 240);
+  --ring: oklch(0.55 0.22 264 / 0.5);
+  --chart-1: oklch(0.55 0.22 264);
+  --chart-2: oklch(0.65 0.25 160);
+  --chart-3: oklch(0.75 0.2 60);
+  --chart-4: oklch(0.6 0.25 300);
+  --chart-5: oklch(0.7 0.22 30);
+  --sidebar: oklch(0.18 0.01 240);
+  --sidebar-foreground: oklch(0.98 0 0);
+  --sidebar-primary: oklch(0.55 0.22 264);
+  --sidebar-primary-foreground: oklch(0.98 0 0);
+  --sidebar-accent: oklch(0.25 0.01 240);
+  --sidebar-accent-foreground: oklch(0.98 0 0);
+  --sidebar-border: oklch(0.25 0.01 240);
+  --sidebar-ring: oklch(0.55 0.22 264 / 0.5);
 }
 
 @theme inline {

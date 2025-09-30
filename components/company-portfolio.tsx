@@ -7,10 +7,11 @@ import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { MapPin, Award, Users, TrendingUp, Shield, Edit3, Save, X, Upload, Plus, Trash2 } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 const CompanyPortfolio = () => {
   const [isEditing, setIsEditing] = useState(false)
+  const [isLoaded, setIsLoaded] = useState(false)
   const [editableData, setEditableData] = useState({
     portfolioProperties: [
       {
@@ -51,7 +52,6 @@ const CompanyPortfolio = () => {
       },
     ],
   })
-  const [originalData, setOriginalData] = useState(editableData)
 
   const achievements = [
     {
@@ -76,14 +76,39 @@ const CompanyPortfolio = () => {
     },
   ]
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("companyPortfolio")
+      if (saved) {
+        try {
+          setEditableData(JSON.parse(saved))
+        } catch (error) {
+          console.error("Error parsing company portfolio data:", error)
+        }
+      }
+      setIsLoaded(true)
+    }
+  }, [])
+
   const handleSave = () => {
     setIsEditing(false)
-    setOriginalData(editableData)
+    if (typeof window !== "undefined") {
+      localStorage.setItem("companyPortfolio", JSON.stringify(editableData))
+    }
   }
 
   const handleCancel = () => {
     setIsEditing(false)
-    setEditableData(originalData)
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("companyPortfolio")
+      if (saved) {
+        try {
+          setEditableData(JSON.parse(saved))
+        } catch (error) {
+          console.error("Error parsing company portfolio data:", error)
+        }
+      }
+    }
   }
 
   const updateProperty = (id: number, field: string, value: string | number) => {

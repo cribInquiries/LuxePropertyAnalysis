@@ -19,7 +19,7 @@ import {
   Plus,
   Trash2,
 } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 const initialData = {
   valueAddons: [
@@ -85,19 +85,47 @@ const initialData = {
 export function ValueMaximization() {
   const [isEditing, setIsEditing] = useState(false)
   const [editableData, setEditableData] = useState(initialData)
-  const [originalData, setOriginalData] = useState(initialData)
+  const [isLoaded, setIsLoaded] = useState(false)
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("valueMaximization")
+      if (saved) {
+        try {
+          setEditableData(JSON.parse(saved))
+        } catch (error) {
+          console.error("Error parsing value maximization data:", error)
+        }
+      }
+      setIsLoaded(true)
+    }
+  }, [])
 
   const totalPotentialIncrease = editableData.valueAddons.reduce((sum, addon) => sum + addon.impact, 0)
   const annualIncrease = totalPotentialIncrease * 365 * 0.82 // Assuming 82% occupancy
 
   const handleSave = () => {
     setIsEditing(false)
-    setOriginalData(editableData)
+    if (typeof window !== "undefined") {
+      localStorage.setItem("valueMaximization", JSON.stringify(editableData))
+    }
   }
 
   const handleCancel = () => {
     setIsEditing(false)
-    setEditableData(originalData)
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("valueMaximization")
+      if (saved) {
+        try {
+          setEditableData(JSON.parse(saved))
+        } catch (error) {
+          console.error("Error parsing value maximization data:", error)
+          setEditableData(initialData)
+        }
+      } else {
+        setEditableData(initialData)
+      }
+    }
   }
 
   const updateValueAddon = (index: number, field: string, value: number | string) => {

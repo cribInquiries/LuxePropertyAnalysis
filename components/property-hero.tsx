@@ -1,12 +1,17 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Edit, Save, X } from "lucide-react"
+import { createClient } from "@/lib/supabase/client"
 
-export function PropertyHero() {
+interface PropertyHeroProps {
+  propertyAnalysisId: string
+}
+
+export function PropertyHero({ propertyAnalysisId }: PropertyHeroProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [heroData, setHeroData] = useState({
     propertyName: "The Adelaide Hills Retreat",
@@ -14,16 +19,97 @@ export function PropertyHero() {
     address: "123 Scenic Drive, Adelaide Hills, SA 5152",
     backgroundImage: "/luxury-property-aerial.png",
   })
-  const [originalData, setOriginalData] = useState(heroData)
+  const [isLoaded, setIsLoaded] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
 
-  const handleSave = () => {
-    setOriginalData(heroData)
+  useEffect(() => {
+    const loadData = async () => {
+      const supabase = createClient()
+      const { data, error } = await supabase
+        .from("property_hero")
+        .select("*")
+        .eq("property_analysis_id", propertyAnalysisId)
+        .single()
+
+      if (data && !error) {
+        setHeroData({
+          propertyName: data.property_name,
+          clientName: data.client_name,
+          address: data.address,
+          backgroundImage: data.background_image || "/luxury-property-aerial.png",
+        })
+      }
+      setIsLoaded(true)
+    }
+
+    loadData()
+  }, [propertyAnalysisId])
+
+  const handleSave = async () => {
+    setIsSaving(true)
+    const supabase = createClient()
+
+    const { error } = await supabase.from("property_hero").upsert(
+      {
+        property_analysis_id: propertyAnalysisId,
+        property_name: heroData.propertyName,
+        client_name: heroData.clientName,
+        address: heroData.address,
+        background_image: heroData.backgroundImage,
+      },
+      {
+        onConflict: "property_analysis_id",
+      },
+    )
+
+    if (error) {
+      console.error("Error saving hero data:", error)
+    }
+
+    setIsSaving(false)
     setIsEditing(false)
   }
 
-  const handleCancel = () => {
-    setHeroData(originalData)
+  const handleCancel = async () => {
+    const supabase = createClient()
+    const { data, error } = await supabase
+      .from("property_hero")
+      .select("*")
+      .eq("property_analysis_id", propertyAnalysisId)
+      .single()
+
+    if (data && !error) {
+      setHeroData({
+        propertyName: data.property_name,
+        clientName: data.client_name,
+        address: data.address,
+        backgroundImage: data.background_image || "/luxury-property-aerial.png",
+      })
+    }
     setIsEditing(false)
+  }
+
+  if (!isLoaded) {
+    return (
+      <section className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-primary via-primary/90 to-primary/80 text-primary-foreground overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0 bg-[url('/luxury-property-aerial.png')] bg-cover bg-center" />
+        </div>
+        <div className="relative z-10 text-center max-w-4xl mx-auto px-6">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="mb-8"
+          >
+            <div className="inline-flex items-center justify-center mb-4">
+              <img src="/luxe-logo.png" alt="Luxe Managements Logo" className="h-64 w-auto" />
+            </div>
+          </motion.div>
+          <h1 className="text-5xl md:text-7xl font-bold text-balance mb-6">Loading...</h1>
+        </div>
+      </section>
+    )
   }
 
   return (
@@ -54,15 +140,21 @@ export function PropertyHero() {
           </Button>
         ) : (
           <div className="flex gap-2">
-            <Button onClick={handleSave} size="sm" className="bg-green-600 hover:bg-green-700 text-white">
+            <Button
+              onClick={handleSave}
+              size="sm"
+              className="bg-green-600 hover:bg-green-700 text-white"
+              disabled={isSaving}
+            >
               <Save className="w-4 h-4 mr-2" />
-              Save
+              {isSaving ? "Saving..." : "Save"}
             </Button>
             <Button
               onClick={handleCancel}
               variant="outline"
               size="sm"
               className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+              disabled={isSaving}
             >
               <X className="w-4 h-4 mr-2" />
               Cancel

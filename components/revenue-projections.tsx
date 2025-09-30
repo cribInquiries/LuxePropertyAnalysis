@@ -5,10 +5,11 @@ import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { DollarSign, Calendar, TrendingUp, Home, Edit3, Save, X } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 export function RevenueProjections() {
   const [isEditing, setIsEditing] = useState(false)
+  const [isLoaded, setIsLoaded] = useState(false)
   const [editableData, setEditableData] = useState({
     baseADR: 280,
     seasonalMultipliers: {
@@ -46,7 +47,35 @@ export function RevenueProjections() {
       { name: "Coastal Escape", adr: 340, occupancy: 88, revenue: 98000 },
     ],
   })
-  const [originalData, setOriginalData] = useState(editableData)
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("revenueProjections")
+        if (saved) {
+          setEditableData(JSON.parse(saved))
+        }
+      } catch (error) {
+        console.error("Error loading revenue projections data:", error)
+      }
+      setIsLoaded(true)
+    }
+  }, [])
+
+  if (!isLoaded) {
+    return (
+      <section className="py-20 bg-background">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center">
+            <div className="animate-pulse">
+              <div className="h-12 bg-muted rounded w-64 mx-auto mb-4"></div>
+              <div className="h-6 bg-muted rounded w-96 mx-auto"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    )
+  }
 
   const monthlyData = [
     {
@@ -180,12 +209,27 @@ export function RevenueProjections() {
 
   const handleSave = () => {
     setIsEditing(false)
-    setOriginalData(editableData)
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem("revenueProjections", JSON.stringify(editableData))
+      } catch (error) {
+        console.error("Error saving revenue projections data:", error)
+      }
+    }
   }
 
   const handleCancel = () => {
     setIsEditing(false)
-    setEditableData(originalData)
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("revenueProjections")
+        if (saved) {
+          setEditableData(JSON.parse(saved))
+        }
+      } catch (error) {
+        console.error("Error loading revenue projections data:", error)
+      }
+    }
   }
 
   const updateSeasonalMultiplier = (month: string, value: number) => {

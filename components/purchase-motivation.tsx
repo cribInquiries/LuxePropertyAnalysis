@@ -1,12 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Target, TrendingUp, MapPin, Clock, Edit3, Save, Plus, X, DollarSign } from "lucide-react"
+import { createClient } from "@/lib/supabase/client"
 
 interface FinancialData {
   purchasePrice: number
@@ -43,22 +44,62 @@ const defaultData: MotivationData = {
   },
 }
 
-export function PurchaseMotivation() {
+interface PurchaseMotivationProps {
+  propertyAnalysisId: string
+}
+
+export function PurchaseMotivation({ propertyAnalysisId }: PurchaseMotivationProps) {
   const [data, setData] = useState<MotivationData>(defaultData)
   const [isEditing, setIsEditing] = useState(false)
   const [editData, setEditData] = useState<MotivationData>(defaultData)
   const [newGoal, setNewGoal] = useState("")
+  const [isLoaded, setIsLoaded] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
 
-  const calculatedLoanAmount = editData.financials.purchasePrice - editData.financials.totalDeposit
-  if (calculatedLoanAmount !== editData.financials.loanAmount && calculatedLoanAmount >= 0) {
-    setEditData((prev) => ({
-      ...prev,
-      financials: {
-        ...prev.financials,
-        loanAmount: calculatedLoanAmount,
-      },
-    }))
-  }
+  useEffect(() => {
+    const loadData = async () => {
+      const supabase = createClient()
+      const { data: motivationData, error } = await supabase
+        .from("purchase_motivation")
+        .select("*")
+        .eq("property_analysis_id", propertyAnalysisId)
+        .single()
+
+      if (motivationData && !error) {
+        const loadedData: MotivationData = {
+          clientGoals: motivationData.investment_goals || defaultData.clientGoals,
+          investmentHorizon: defaultData.investmentHorizon,
+          expectedReturn: defaultData.expectedReturn,
+          location: motivationData.location || defaultData.location,
+          financials: {
+            purchasePrice: Number(motivationData.purchase_price) || defaultData.financials.purchasePrice,
+            totalDeposit: Number(motivationData.total_deposit) || defaultData.financials.totalDeposit,
+            loanAmount: Number(motivationData.loan_amount) || defaultData.financials.loanAmount,
+            interestRate: Number(motivationData.interest_rate) || defaultData.financials.interestRate,
+            loanTerm: motivationData.loan_term || defaultData.financials.loanTerm,
+          },
+        }
+        setData(loadedData)
+        setEditData(loadedData)
+      }
+      setIsLoaded(true)
+    }
+
+    loadData()
+  }, [propertyAnalysisId])
+
+  useEffect(() => {
+    const calculatedLoanAmount = editData.financials.purchasePrice - editData.financials.totalDeposit
+    if (calculatedLoanAmount !== editData.financials.loanAmount) {
+      setEditData((prev) => ({
+        ...prev,
+        financials: {
+          ...prev.financials,
+          loanAmount: Math.max(0, calculatedLoanAmount),
+        },
+      }))
+    }
+  }, [editData.financials.purchasePrice, editData.financials.totalDeposit])
 
   const monthlyPayment =
     (editData.financials.loanAmount *
@@ -67,17 +108,70 @@ export function PurchaseMotivation() {
     (Math.pow(1 + editData.financials.interestRate / 100 / 12, editData.financials.loanTerm * 12) - 1)
   const loanToValue = (editData.financials.loanAmount / editData.financials.purchasePrice) * 100
 
-  const getRevenueData = () => 85000 // default revenue
-  const getMaintenanceData = () => 18500 // default maintenance
+  const getRevenueData = async () => {
+    if (isLoaded) {
+      const supabase = createClient()
+      const { data: revenueData } = await supabase
+        .from("revenue_projections")
+        .select("*")
+        .eq("property_analysis_id", propertyAnalysisId)
+        .single()
 
-  // Calculate automatic investment horizon based on loan term and break-even analysis
+      if (revenueData) {
+        const monthlyOccupancy = revenueData.monthly_occupancy || {}
+        const monthlyMultipliers = revenueData.monthly_multipliers || {}
+        const baseAdr = Number(revenueData.base_adr) || 350
+
+        let totalRevenue = 0
+        for (let month = 1; month <= 12; month++) {
+          const occupancy = monthlyOccupancy[month] || 0.7
+          const multiplier = monthlyMultipliers[month] || 1
+          const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month - 1]
+          totalRevenue += baseAdr * multiplier * occupancy * daysInMonth
+        }
+        return Math.round(totalRevenue)
+      }
+    }
+    return 85000
+  }
+
+  const getMaintenanceData = async () => {
+    if (isLoaded) {
+      const supabase = createClient()
+      const { data: maintenanceData } = await supabase
+        .from("maintenance_breakdown")
+        .select("*")
+        .eq("property_analysis_id", propertyAnalysisId)
+        .single()
+
+      if (maintenanceData) {
+        const poolCost = maintenanceData.has_pool
+          ? Number(maintenanceData.pool_chemicals_cost) + Number(maintenanceData.pool_equipment_maintenance)
+          : 0
+        const gardenCost = Number(maintenanceData.garden_water_cost) + Number(maintenanceData.landscaping_cost)
+        const generalMaintenance =
+          Number(maintenanceData.total_area) *
+          (Number(maintenanceData.general_repair_rate) + Number(maintenanceData.hvac_maintenance_rate))
+        const cleaningCost = Number(maintenanceData.bedrooms) * Number(maintenanceData.cleaning_cost_per_bedroom) * 12
+        const linenCost = Number(maintenanceData.bedrooms) * Number(maintenanceData.linen_service_per_bedroom) * 12
+        const stayBasedCosts =
+          Number(maintenanceData.operational_costs_per_stay) * Number(maintenanceData.average_stays_per_year)
+
+        return Math.round(
+          (poolCost + gardenCost + generalMaintenance + cleaningCost + linenCost + stayBasedCosts) *
+            Number(maintenanceData.luxury_multiplier),
+        )
+      }
+    }
+    return 18500
+  }
+
   const calculateInvestmentHorizon = () => {
     const annualRevenue = getRevenueData()
     const annualMaintenance = getMaintenanceData()
     const annualLoanPayments = monthlyPayment * 12
     const netCashFlow = annualRevenue - annualMaintenance - annualLoanPayments
 
-    // If positive cash flow, suggest loan term as minimum horizon
     if (netCashFlow > 0) {
       if (editData.financials.loanTerm <= 10)
         return `${editData.financials.loanTerm}-${editData.financials.loanTerm + 5} years`
@@ -85,12 +179,10 @@ export function PurchaseMotivation() {
         return `${editData.financials.loanTerm}-${editData.financials.loanTerm + 10} years`
       else return `${editData.financials.loanTerm}+ years`
     } else {
-      // If negative cash flow, suggest longer horizon for appreciation
       return `${Math.max(editData.financials.loanTerm, 15)}-${Math.max(editData.financials.loanTerm + 10, 25)} years`
     }
   }
 
-  // Calculate expected return based on revenue, costs, and property appreciation
   const calculateExpectedReturn = () => {
     const annualRevenue = getRevenueData()
     const annualMaintenance = getMaintenanceData()
@@ -98,11 +190,9 @@ export function PurchaseMotivation() {
     const netOperatingIncome = annualRevenue - annualMaintenance
     const netCashFlow = netOperatingIncome - annualLoanPayments
 
-    // Calculate cash-on-cash return
     const cashOnCashReturn = (netCashFlow / editData.financials.totalDeposit) * 100
 
-    // Estimate total return including appreciation (assume 3-5% annual appreciation)
-    const appreciationReturn = 4 // Conservative 4% annual appreciation
+    const appreciationReturn = 4
     const totalReturn = Math.max(cashOnCashReturn + appreciationReturn, 0)
 
     if (totalReturn < 8) return `6-10% annually`
@@ -111,9 +201,38 @@ export function PurchaseMotivation() {
     else return `15%+ annually`
   }
 
-  // Auto-calculate values
   const autoInvestmentHorizon = calculateInvestmentHorizon()
   const autoExpectedReturn = calculateExpectedReturn()
+
+  const handleSave = async () => {
+    setIsSaving(true)
+    const supabase = createClient()
+
+    const { error } = await supabase.from("purchase_motivation").upsert(
+      {
+        property_analysis_id: propertyAnalysisId,
+        investment_goals: editData.clientGoals,
+        location: editData.location,
+        purchase_price: editData.financials.purchasePrice,
+        total_deposit: editData.financials.totalDeposit,
+        loan_amount: editData.financials.loanAmount,
+        interest_rate: editData.financials.interestRate,
+        loan_term: editData.financials.loanTerm,
+      },
+      {
+        onConflict: "property_analysis_id",
+      },
+    )
+
+    if (error) {
+      console.error("Error saving motivation data:", error)
+    } else {
+      setData(editData)
+    }
+
+    setIsSaving(false)
+    setIsEditing(false)
+  }
 
   return (
     <section className="py-20 bg-muted/30">
@@ -134,15 +253,9 @@ export function PurchaseMotivation() {
               </Button>
             ) : (
               <div className="flex gap-2">
-                <Button
-                  onClick={() => {
-                    setData(editData)
-                    setIsEditing(false)
-                  }}
-                  size="sm"
-                >
+                <Button onClick={handleSave} size="sm" disabled={isSaving}>
                   <Save className="w-4 h-4 mr-2" />
-                  Save
+                  {isSaving ? "Saving..." : "Save"}
                 </Button>
                 <Button
                   onClick={() => {
@@ -152,6 +265,7 @@ export function PurchaseMotivation() {
                   }}
                   variant="outline"
                   size="sm"
+                  disabled={isSaving}
                 >
                   Cancel
                 </Button>

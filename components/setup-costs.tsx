@@ -7,11 +7,12 @@ import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Palette, Sofa, Wrench, Camera, Edit3, Save, X, Upload, Plus, Trash2 } from "lucide-react"
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 
 export function SetupCosts() {
   const [isEditing, setIsEditing] = useState(false)
   const [isEditingDesign, setIsEditingDesign] = useState(false)
+  const [isLoaded, setIsLoaded] = useState(false)
   const [editableData, setEditableData] = useState({
     renovationItems: [
       { category: "Kitchen Upgrade", cost: 25000, description: "Modern appliances, countertops, and fixtures" },
@@ -46,9 +47,37 @@ export function SetupCosts() {
       },
     ],
   })
-  const [originalData, setOriginalData] = useState(editableData)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("setupCosts")
+        if (saved) {
+          setEditableData(JSON.parse(saved))
+        }
+      } catch (error) {
+        console.error("Error loading setup costs data:", error)
+      }
+      setIsLoaded(true)
+    }
+  }, [])
+
+  if (!isLoaded) {
+    return (
+      <section className="py-20 bg-background">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center">
+            <div className="animate-pulse">
+              <div className="h-12 bg-muted rounded w-64 mx-auto mb-4"></div>
+              <div className="h-6 bg-muted rounded w-96 mx-auto"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    )
+  }
 
   const totalRenovation = editableData.renovationItems.reduce((sum, item) => sum + item.cost, 0)
   const totalFurnishing = editableData.furnishingItems.reduce((sum, item) => sum + item.cost, 0)
@@ -56,22 +85,52 @@ export function SetupCosts() {
 
   const handleSave = () => {
     setIsEditing(false)
-    setOriginalData(editableData)
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem("setupCosts", JSON.stringify(editableData))
+      } catch (error) {
+        console.error("Error saving setup costs data:", error)
+      }
+    }
   }
 
   const handleDesignSave = () => {
     setIsEditingDesign(false)
-    setOriginalData(editableData)
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem("setupCosts", JSON.stringify(editableData))
+      } catch (error) {
+        console.error("Error saving setup costs data:", error)
+      }
+    }
   }
 
   const handleDesignCancel = () => {
     setIsEditingDesign(false)
-    setEditableData(originalData)
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("setupCosts")
+        if (saved) {
+          setEditableData(JSON.parse(saved))
+        }
+      } catch (error) {
+        console.error("Error loading setup costs data:", error)
+      }
+    }
   }
 
   const handleCancel = () => {
     setIsEditing(false)
-    setEditableData(originalData)
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("setupCosts")
+        if (saved) {
+          setEditableData(JSON.parse(saved))
+        }
+      } catch (error) {
+        console.error("Error loading setup costs data:", error)
+      }
+    }
   }
 
   const updateRenovationItem = (index: number, field: string, value: number | string) => {
