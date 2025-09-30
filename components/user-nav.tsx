@@ -1,6 +1,6 @@
 "use client"
 
-import { auth } from "@/lib/auth/client-auth"
+import { auth } from "@/lib/auth/supabase-auth"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -13,15 +13,14 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
-
-interface User {
-  id: string
-  email: string
-  name?: string
-}
+import { Building2, LogOut } from "lucide-react"
 
 interface UserNavProps {
-  user: User
+  user: {
+    id: string
+    email: string
+    name?: string
+  }
 }
 
 export function UserNav({ user }: UserNavProps) {
@@ -33,10 +32,11 @@ export function UserNav({ user }: UserNavProps) {
     try {
       await auth.signOut()
       router.push("/auth/login")
+      router.refresh()
     } catch (error) {
       console.error("Error signing out:", error)
-      // Still redirect even if there's an error to ensure user is logged out
       router.push("/auth/login")
+      router.refresh()
     } finally {
       setIsSigningOut(false)
     }
@@ -51,7 +51,7 @@ export function UserNav({ user }: UserNavProps) {
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <span className="text-xl">🏢</span>
+            <Building2 className="w-5 h-5 text-slate-700" />
             <span className="font-bold text-slate-900">LuxeAnalytics</span>
           </div>
 
@@ -74,7 +74,6 @@ export function UserNav({ user }: UserNavProps) {
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem className="cursor-pointer">
-                <span className="mr-2">👤</span>
                 <span>Profile</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
@@ -83,7 +82,7 @@ export function UserNav({ user }: UserNavProps) {
                 onClick={handleSignOut}
                 disabled={isSigningOut}
               >
-                <span className="mr-2">🚪</span>
+                <LogOut className="mr-2 h-4 w-4" />
                 <span>{isSigningOut ? "Signing out..." : "Sign out"}</span>
               </DropdownMenuItem>
             </DropdownMenuContent>

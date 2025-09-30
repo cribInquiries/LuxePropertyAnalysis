@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { auth } from "@/lib/auth/client-auth"
+import { auth } from "@/lib/auth/supabase-auth"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+import { Building2 } from "lucide-react"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -35,6 +36,7 @@ export default function LoginPage() {
       if (authError) throw new Error(authError)
       if (user) {
         router.push("/")
+        router.refresh()
       }
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred during sign in")
@@ -48,7 +50,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
-            <span className="text-2xl mr-2">🏢</span>
+            <Building2 className="w-6 h-6 mr-2 text-slate-700" />
             <h1 className="text-2xl font-bold text-slate-900">LuxeAnalytics</h1>
           </div>
           <p className="text-slate-600">Premium Property Investment Analysis</p>

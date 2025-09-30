@@ -16,14 +16,14 @@ export interface Profile {
   updated_at: string
 }
 
-export class ClientAuth {
-  private static instance: ClientAuth
+export class SupabaseAuth {
+  private static instance: SupabaseAuth
 
-  static getInstance(): ClientAuth {
-    if (!ClientAuth.instance) {
-      ClientAuth.instance = new ClientAuth()
+  static getInstance(): SupabaseAuth {
+    if (!SupabaseAuth.instance) {
+      SupabaseAuth.instance = new SupabaseAuth()
     }
-    return ClientAuth.instance
+    return SupabaseAuth.instance
   }
 
   async signIn(email: string, password: string): Promise<{ user: User | null; error: string | null }> {
@@ -133,4 +133,4 @@ export class ClientAuth {
   }
 }
 
-export const auth = ClientAuth.getInstance()
+export const auth = SupabaseAuth.getInstance()

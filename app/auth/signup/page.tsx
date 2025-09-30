@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { auth } from "@/lib/auth/client-auth"
+import { auth } from "@/lib/auth/supabase-auth"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"

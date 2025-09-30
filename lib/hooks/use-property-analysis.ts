@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { toast } from "@/hooks/use-toast"
 
@@ -38,7 +38,7 @@ export function usePropertyAnalysis() {
     setMounted(true)
   }, [])
 
-  const loadAnalyses = async () => {
+  const loadAnalyses = useCallback(async () => {
     if (!mounted || !supabase) return
 
     try {
@@ -61,13 +61,14 @@ export function usePropertyAnalysis() {
       if (fetchError) throw fetchError
 
       setAnalyses(data || [])
+      setError(null)
     } catch (err) {
       console.error("Error loading analyses:", err)
       setError(err instanceof Error ? err.message : "Failed to load analyses")
     } finally {
       setLoading(false)
     }
-  }
+  }, [mounted, supabase])
 
   const createAnalysis = async (data: CreatePropertyAnalysisData): Promise<PropertyAnalysis | null> => {
     if (!supabase) return null
@@ -216,30 +217,33 @@ export function usePropertyAnalysis() {
     }
   }
 
-  const autoSaveAnalysis = async (id: string, analysisData: Record<string, any>) => {
-    if (!supabase) return
+  const autoSaveAnalysis = useCallback(
+    async (id: string, analysisData: Record<string, any>) => {
+      if (!supabase) return
 
-    try {
-      await supabase
-        .from("property_analyses")
-        .update({
-          analysis_data: analysisData,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", id)
+      try {
+        await supabase
+          .from("property_analyses")
+          .update({
+            analysis_data: analysisData,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", id)
 
-      // Update local state without showing toast for auto-save
-      setAnalyses((prev) =>
-        prev.map((analysis) =>
-          analysis.id === id
-            ? { ...analysis, analysis_data: analysisData, updated_at: new Date().toISOString() }
-            : analysis,
-        ),
-      )
-    } catch (err) {
-      console.error("Auto-save failed:", err)
-    }
-  }
+        // Update local state without showing toast for auto-save
+        setAnalyses((prev) =>
+          prev.map((analysis) =>
+            analysis.id === id
+              ? { ...analysis, analysis_data: analysisData, updated_at: new Date().toISOString() }
+              : analysis,
+          ),
+        )
+      } catch (err) {
+        console.error("Auto-save failed:", err)
+      }
+    },
+    [supabase],
+  )
 
   const logActivity = async (action: string, resourceType: string, resourceId: string) => {
     if (!supabase) return
@@ -283,7 +287,7 @@ export function usePropertyAnalysis() {
     if (mounted) {
       loadAnalyses()
     }
-  }, [mounted])
+  }, [mounted, loadAnalyses])
 
   return {
     analyses,

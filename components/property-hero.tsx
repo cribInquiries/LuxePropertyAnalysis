@@ -5,6 +5,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Edit, Save, X } from "lucide-react"
+import Image from "next/image"
 
 export function PropertyHero() {
   const [isEditing, setIsEditing] = useState(false)
@@ -30,9 +31,13 @@ export function PropertyHero() {
     <section className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-primary via-primary/90 to-primary/80 text-primary-foreground overflow-hidden">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-10">
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url('${heroData.backgroundImage}')` }}
+        <Image
+          src={heroData.backgroundImage || "/placeholder.svg"}
+          alt="Property background"
+          fill
+          className="object-cover"
+          priority
+          sizes="100vw"
         />
       </div>
 
@@ -90,7 +95,14 @@ export function PropertyHero() {
           className="mb-8"
         >
           <div className="inline-flex items-center justify-center mb-4">
-            <img src="/luxe-logo.png" alt="Luxe Managements Logo" className="h-64 w-auto" />
+            <Image
+              src="/luxe-logo.png"
+              alt="Luxe Managements Logo"
+              width={256}
+              height={256}
+              priority
+              className="h-64 w-auto"
+            />
           </div>
         </motion.div>
 
@@ -106,6 +118,7 @@ export function PropertyHero() {
               onChange={(e) => setHeroData({ ...heroData, propertyName: e.target.value })}
               className="text-5xl md:text-7xl font-bold text-center bg-white/10 border-white/20 text-white placeholder-white/50 text-balance"
               placeholder="Property Name"
+              aria-label="Property name"
             />
           ) : (
             <h1 className="text-5xl md:text-7xl font-bold text-balance">{heroData.propertyName}</h1>
@@ -124,6 +137,7 @@ export function PropertyHero() {
               onChange={(e) => setHeroData({ ...heroData, address: e.target.value })}
               className="text-lg md:text-xl text-center bg-white/10 border-white/20 text-white placeholder-white/50"
               placeholder="Property Address"
+              aria-label="Property address"
             />
           ) : (
             <p className="text-lg md:text-xl text-primary-foreground/80">{heroData.address}</p>
@@ -144,6 +158,7 @@ export function PropertyHero() {
                 onChange={(e) => setHeroData({ ...heroData, clientName: e.target.value })}
                 className="inline-block w-auto min-w-[200px] bg-white/10 border-white/20 text-white placeholder-white/50 font-semibold"
                 placeholder="Client Name"
+                aria-label="Client name"
               />
             </div>
           ) : (
@@ -164,12 +179,16 @@ export function PropertyHero() {
 
           {isEditing && (
             <div className="mt-6">
-              <label className="block text-sm font-medium text-white/80 mb-2">Background Image URL</label>
+              <label htmlFor="background-image" className="block text-sm font-medium text-white/80 mb-2">
+                Background Image URL
+              </label>
               <Input
+                id="background-image"
                 value={heroData.backgroundImage}
                 onChange={(e) => setHeroData({ ...heroData, backgroundImage: e.target.value })}
                 className="bg-white/10 border-white/20 text-white placeholder-white/50"
                 placeholder="Enter image URL or path"
+                aria-label="Background image URL"
               />
               <p className="text-xs text-white/60 mt-1">Upload images to /public folder or use external URLs</p>
             </div>
